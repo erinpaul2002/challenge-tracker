@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  /* Base Layers */
+  --void-black: #050505;
+  --armor-gray: #121214;
+  --gunmetal: #2A2A2E;
+
+  /* Signal Colors */
+  --terminal-green: #00FF41;
+  --alert-amber: #FFB000;
+  --hostile-red: #FF2A2A;
+  --cyan-optic: #00F0FF;
+
+  /* Text Hierarchy */
+  --hud-white: #E0E0E0;
+  --dimmed-gray: #858585;
+}
+
+@theme inline {
+  --color-void: var(--void-black);
+  --color-armor: var(--armor-gray);
+  --color-gunmetal: var(--gunmetal);
+  
+  --color-terminal: var(--terminal-green);
+  --color-alert: var(--alert-amber);
+  --color-hostile: var(--hostile-red);
+  --color-optic: var(--cyan-optic);
+  
+  --color-hud: var(--hud-white);
+  --color-dimmed: var(--dimmed-gray);
+
+  --font-chakra: var(--font-chakra);
+  --font-mono: var(--font-mono);
+}
+
+body {
+  background: var(--void-black);
+  color: var(--hud-white);
+  font-family: var(--font-mono);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-chakra);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
