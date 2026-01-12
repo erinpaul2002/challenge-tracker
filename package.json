@@ -1,7 +1,6 @@
 {
   "name": "challenge-tracker",
   "version": "0.1.0",
-  "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,15 +11,19 @@
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "test:coverage": "vitest run --coverage",
-    "test:supabase": "npx tsx tests/test-supabase-connection.ts"
+    "test:supabase": "npx tsx tests/test-supabase-connection.ts",
+    "test:add-challenges": "npx tsx tests/test-add-challenges.ts"
   },
+  "license": "MIT",
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.89.0",
+    "bcryptjs": "^3.0.3",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
