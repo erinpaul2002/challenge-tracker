@@ -1,45 +1,20 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Challenge Tracker is a [Next.js](https://nextjs.org) app using [Convex](https://convex.dev) for backend data/actions.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies, configure env, and run the app:
 
 ```bash
+npm install
+# the "dev" script now starts both Next and Convex together
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-## Supabase Setup
+(The previous `npx convex dev --once` step is no longer required, the backend starts automatically.)
 
-This project uses Supabase for backend services. To set up your Supabase connection:
-
-1. Create a Supabase project at [supabase.com](https://supabase.com)
-2. Copy your project URL and anon key from the project settings
-3. Create a `.env.local` file in the root directory
-4. Add your Supabase credentials:
-
-```bash
-cp .env.example .env.local
-```
-
-Then edit `.env.local` with your actual values.
-
-### Testing Supabase Connection
-
-To verify your Supabase connection is working:
-
-```bash
-npm run test:supabase
-```
-
-This will test if your environment variables are set and if the Supabase client can connect successfully.
+Create `.env.local` from `.env.example` and set `NEXT_PUBLIC_CONVEX_URL`.
 
 ## Learn More
 
