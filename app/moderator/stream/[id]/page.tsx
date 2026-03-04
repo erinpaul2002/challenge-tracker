@@ -105,7 +105,12 @@ export default function StreamChallengeDetail({ params }: { params: Promise<{ id
 
     const hasModeratorSession = () => {
         const session = localStorage.getItem('moderator_session');
-        if (!session) {
+        const cookieSession = document.cookie
+            .split('; ')
+            .find((row) => row.startsWith('moderator_session='))
+            ?.split('=')[1];
+
+        if (!session && !cookieSession) {
             router.push('/login');
             return false;
         }

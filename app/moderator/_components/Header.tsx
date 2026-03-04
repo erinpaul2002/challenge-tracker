@@ -1,8 +1,9 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Cpu, UserCheck, LogOut, Menu } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { authService } from '@/services/authService';
 
 interface ModeratorSession {
   moderator_id: string;
@@ -18,23 +19,24 @@ interface HeaderProps {
 
 export default function Header({ onToggleSidebar }: HeaderProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [moderatorSession, setModeratorSession] = useState<ModeratorSession | null>(null);
+  const [moderatorSession] = useState<ModeratorSession | null>(() => {
+    if (typeof window === 'undefined') return null;
 
-  useEffect(() => {
-    const session = localStorage.getItem('moderator_session');
-    if (session) {
-      try {
-        setModeratorSession(JSON.parse(session));
-      } catch (error) {
-        console.error('Invalid moderator session:', error);
-      }
+    const session = window.localStorage.getItem('moderator_session');
+    if (!session) return null;
+
+    try {
+      return JSON.parse(session) as ModeratorSession;
+    } catch {
+      return null;
     }
-  }, []);
+  });
 
   const handleSignOut = () => {
-    localStorage.removeItem('moderator_session');
-    window.location.href = '/login';
+    void (async () => {
+      await authService.signOut();
+      window.location.href = '/login';
+    })();
   };
 
   const getPageTitle = () => {

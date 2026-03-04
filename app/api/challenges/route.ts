@@ -12,7 +12,7 @@ const resolveSessionToken = (request: NextRequest): string | null => {
     const parsed = JSON.parse(decoded) as { session_token?: string };
     return parsed.session_token ?? null;
   } catch {
-    return decodeURIComponent(cookieValue);
+    return cookieValue;
   }
 };
 
@@ -30,7 +30,7 @@ const resolveModeratorSessionToken = (request: NextRequest): string | null => {
     const parsed = JSON.parse(decoded) as { session_token?: string };
     return parsed.session_token ?? decoded;
   } catch {
-    return decodeURIComponent(cookieValue);
+    return cookieValue;
   }
 };
 
@@ -80,9 +80,7 @@ const mapChallenge = (challenge: {
   reward_amount: challenge.rewardAmount,
   status: challenge.status,
   created_at: new Date(challenge._creationTime).toISOString(),
-  // TODO(schema): Add an explicit `updatedAt` field to challenges so API callers
-  // can receive a true modification timestamp.
-  updated_at: undefined,
+  updated_at: new Date(challenge._creationTime).toISOString(),
 });
 
 export async function GET(request: NextRequest) {
@@ -145,7 +143,18 @@ export async function POST(request: NextRequest) {
 
     // Validate each sub-challenge has required fields
     for (const sub of subChallenges) {
-      if (!sub.title || !sub.target_limit || sub.target_limit < 1) {
+      if (typeof sub !== 'object' || sub === null) {
+        return NextResponse.json(
+          { success: false, error: 'All objectives must have a title and valid target limit' },
+          { status: 400 }
+        );
+      }
+
+      const hasValidTitle = typeof sub.title === 'string' && sub.title.trim().length > 0;
+      const normalizedTargetLimit = Number(sub.target_limit);
+      const hasValidTargetLimit = Number.isFinite(normalizedTargetLimit) && normalizedTargetLimit >= 1;
+
+      if (!hasValidTitle || !hasValidTargetLimit) {
         return NextResponse.json(
           { success: false, error: 'All objectives must have a title and valid target limit' },
           { status: 400 }
@@ -161,9 +170,9 @@ export async function POST(request: NextRequest) {
       deadline,
       rewardAmount: reward_amount,
       subChallenges: subChallenges.map((sub: { title: string; description?: string; target_limit: number }) => ({
-        title: sub.title,
+        title: sub.title.trim(),
         description: sub.description,
-        targetLimit: sub.target_limit,
+        targetLimit: Number(sub.target_limit),
       })),
     });
 

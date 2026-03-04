@@ -11,6 +11,7 @@ import {
   X
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { authService } from '@/services/authService';
 
 const navItems = [
   { name: 'DASHBOARD', icon: LayoutDashboard, href: '/moderator/dashboard' },
@@ -26,8 +27,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleSignOut = () => {
-    localStorage.removeItem('moderator_session');
+  const handleSignOut = async () => {
+    await authService.signOut();
     router.push('/login');
   };
 

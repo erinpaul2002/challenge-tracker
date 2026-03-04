@@ -89,6 +89,34 @@ const mapChallenge = (challenge: {
   updated_at: new Date(challenge._creationTime).toISOString(),
 });
 
+const classifyAuthorizationError = (error: unknown): 'unauthorized' | 'forbidden' | null => {
+  const name =
+    typeof error === 'object' && error !== null && 'name' in error
+      ? String((error as { name?: unknown }).name ?? '')
+      : '';
+  const message = error instanceof Error ? error.message : String(error ?? '');
+  const combined = `${name} ${message}`.toLowerCase();
+
+  if (
+    combined.includes('unauthorized') ||
+    combined.includes('auth') ||
+    combined.includes('not authenticated')
+  ) {
+    return 'unauthorized';
+  }
+
+  if (
+    combined.includes('forbidden') ||
+    combined.includes('not owner') ||
+    combined.includes('ownership') ||
+    combined.includes('access denied')
+  ) {
+    return 'forbidden';
+  }
+
+  return null;
+};
+
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const streamerId = await getStreamerAccess(request);
@@ -139,7 +167,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const streamerId = await getStreamerAccess(request);
     const sessionToken =
-      resolveModeratorSessionToken(request) ?? resolveSessionToken(request);
+      resolveSessionToken(request) ?? resolveModeratorSessionToken(request);
     if (!streamerId) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -200,6 +228,21 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     });
 
   } catch (error) {
+    const authErrorType = classifyAuthorizationError(error);
+    if (authErrorType === 'unauthorized') {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    if (authErrorType === 'forbidden') {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden' },
+        { status: 403 }
+      );
+    }
+
     console.error('Update challenge API error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
@@ -212,7 +255,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const streamerId = await getStreamerAccess(request);
     const sessionToken =
-      resolveModeratorSessionToken(request) ?? resolveSessionToken(request);
+      resolveSessionToken(request) ?? resolveModeratorSessionToken(request);
     if (!streamerId) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -258,6 +301,21 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     });
 
   } catch (error) {
+    const authErrorType = classifyAuthorizationError(error);
+    if (authErrorType === 'unauthorized') {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    if (authErrorType === 'forbidden') {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden' },
+        { status: 403 }
+      );
+    }
+
     console.error('Delete challenge API error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },

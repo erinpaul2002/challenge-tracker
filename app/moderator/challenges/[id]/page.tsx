@@ -127,6 +127,14 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
   };
 
   useEffect(() => {
+    if (!moderatorSessionToken) {
+      setChallenge(null);
+      setSubChallenges([]);
+      setError('Unauthorized');
+      setLoading(false);
+      return;
+    }
+
     if (challengeFromQuery === undefined) {
       setLoading(true);
       return;
@@ -176,7 +184,7 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
     });
     setError(null);
     setLoading(false);
-  }, [challengeFromQuery]);
+  }, [challengeFromQuery, moderatorSessionToken]);
 
   const updateSubProgress = async (subId: string, increment: number) => {
     if (!moderatorSessionToken) return;
@@ -184,6 +192,7 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
     if (!subChallenge) return;
 
     const newProgress = Math.max(0, Math.min(subChallenge.target_limit, subChallenge.current_progress + increment));
+    if (newProgress === subChallenge.current_progress) return;
 
     try {
       await updateSubChallengeMutation({
@@ -661,6 +670,7 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => updateSubProgress(sub.id, -1)}
+                              disabled={sub.current_progress <= 0}
                               className="w-9 h-9 md:w-8 md:h-8 flex items-center justify-center border border-gunmetal hover:border-tactical hover:text-tactical transition-all"
                             >
                               <Minus size={14} />
@@ -670,6 +680,7 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
                             </span>
                             <button
                               onClick={() => updateSubProgress(sub.id, 1)}
+                              disabled={sub.current_progress >= sub.target_limit}
                               className="w-9 h-9 md:w-8 md:h-8 flex items-center justify-center border border-gunmetal hover:border-tactical hover:text-tactical transition-all"
                             >
                               <Plus size={14} />

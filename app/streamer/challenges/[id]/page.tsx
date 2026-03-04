@@ -120,6 +120,7 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
     if (!subChallenge) return;
 
     const boundedProgress = Math.max(0, Math.min(subChallenge.target_limit, newProgress));
+    const newStatus: SubChallenge['status'] = boundedProgress >= subChallenge.target_limit ? 'completed' : 'active';
 
     setUpdatingProgress(subId);
     try {
@@ -127,6 +128,7 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
         sessionToken: streamerSessionToken,
         subChallengeId: subId as Id<'subChallenges'>,
         currentProgress: boundedProgress,
+        status: newStatus,
       });
 
       // Update local state
@@ -134,7 +136,7 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
         ...prev,
         sub_challenges: prev.sub_challenges.map(sub =>
           sub.id === subId
-            ? { ...sub, current_progress: boundedProgress }
+            ? { ...sub, current_progress: boundedProgress, status: newStatus }
             : sub
         )
       } : null);
@@ -419,6 +421,15 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
     if (!streamerSessionToken) return;
     if (!editingSubChallenge || !editTitle.trim()) return;
 
+    const latestSubChallenge = challenge?.sub_challenges.find((sub) => sub.id === editingSubChallenge.id) ?? editingSubChallenge;
+    const currentProgress = latestSubChallenge.current_progress;
+    if (editTargetLimit < currentProgress) {
+      alert('Target limit cannot be less than current progress. Please increase target or decrease progress first.');
+      return;
+    }
+
+    const nextStatus: SubChallenge['status'] = currentProgress >= editTargetLimit ? 'completed' : 'active';
+
     setUpdatingProgress(editingSubChallenge.id);
     try {
       await updateSubChallengeMutation({
@@ -427,6 +438,7 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
         title: editTitle.trim(),
         description: editDescription.trim() || undefined,
         targetLimit: editTargetLimit,
+        status: nextStatus,
       });
 
       // Update local state
@@ -437,7 +449,8 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
             ...sub,
             title: editTitle.trim(),
             description: editDescription.trim() || undefined,
-            target_limit: editTargetLimit
+            target_limit: editTargetLimit,
+            status: nextStatus,
           } : sub
         )
       } : null);
@@ -455,6 +468,13 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
   };
 
   useEffect(() => {
+    if (!streamerSessionToken) {
+      setError('Unauthorized');
+      setChallenge(null);
+      setLoading(false);
+      return;
+    }
+
     if (challengeFromQuery === undefined) {
       setLoading(true);
       return;
@@ -499,7 +519,7 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
     });
     setError(null);
     setLoading(false);
-  }, [challengeFromQuery]);
+  }, [challengeFromQuery, streamerSessionToken]);
 
   if (loading) {
     return (
