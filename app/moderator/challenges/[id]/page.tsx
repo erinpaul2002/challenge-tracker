@@ -3,7 +3,6 @@
 import {
   ArrowLeft,
   Target,
-  ChevronRight,
   Plus,
   Minus,
   Trash2,
@@ -48,11 +47,18 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
 
   const getModeratorSessionToken = () => {
     const session = localStorage.getItem('moderator_session');
-    if (!session) return null;
+    const cookieToken = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('moderator_session='))
+      ?.split('=')[1];
+
+    if (!session) {
+      return cookieToken ? decodeURIComponent(cookieToken) : null;
+    }
 
     try {
-      const parsed = JSON.parse(session) as { session_token?: string };
-      return parsed.session_token ?? session;
+      const parsed = JSON.parse(session) as { session_token?: string; sessionToken?: string };
+      return parsed.session_token ?? parsed.sessionToken ?? (cookieToken ? decodeURIComponent(cookieToken) : null);
     } catch {
       return session;
     }
@@ -371,12 +377,13 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
   };
 
   const confirmDeleteSubChallenge = async () => {
-    if (!subChallengeToDelete) return;
+    if (!subChallengeToDelete || !moderatorSessionToken) return;
 
     setDeletingSubChallenge(subChallengeToDelete.id);
     setShowDeleteSubModal(false);
     try {
       await deleteSubChallengeMutation({
+        sessionToken: moderatorSessionToken,
         subChallengeId: subChallengeToDelete.id as Id<'subChallenges'>,
       });
 
@@ -468,12 +475,13 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
   };
 
   const confirmDeleteChallenge = async () => {
-    if (!challenge) return;
+    if (!challenge || !moderatorSessionToken) return;
 
     setDeletingChallenge(true);
     setShowDeleteChallengeModal(false);
     try {
       await deleteChallengeMutation({
+        sessionToken: moderatorSessionToken,
         challengeId,
       });
       router.push('/moderator/challenges');
@@ -567,11 +575,6 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
             <span className="hidden sm:inline">DELETE_CHALLENGE</span>
             <span className="sm:hidden">DELETE</span>
           </button>
-        </div>
-        <div className="flex items-center gap-4 hidden">
-          <span className="text-[10px] text-dimmed font-bold"></span>
-          <div className="h-4 w-px bg-gunmetal"></div>
-          <span className="text-[10px] text-terminal font-black animate-pulse"></span>
         </div>
       </div>
 

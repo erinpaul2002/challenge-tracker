@@ -138,6 +138,7 @@ export default function LoginPage() {
       localStorage.setItem(
         'moderator_session',
         JSON.stringify({
+          session_token: result.sessionToken,
           moderator_id: result.moderatorId,
           streamer_id: result.streamerId,
           streamer_name: result.streamerName,

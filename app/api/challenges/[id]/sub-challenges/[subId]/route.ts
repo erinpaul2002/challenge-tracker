@@ -32,7 +32,13 @@ const resolveModeratorSessionToken = (request: NextRequest): string | null => {
   const cookieValue = request.cookies.get('moderator_session')?.value;
   if (!cookieValue) return null;
 
-  return decodeURIComponent(cookieValue);
+  try {
+    const decoded = decodeURIComponent(cookieValue);
+    const parsed = JSON.parse(decoded) as { session_token?: string };
+    return parsed.session_token ?? decoded;
+  } catch {
+    return decodeURIComponent(cookieValue);
+  }
 };
 
 const getStreamerAccess = async (request: NextRequest): Promise<string | null> => {
@@ -216,7 +222,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const streamerId = await getStreamerAccess(request);
+    const sessionToken =
+      resolveModeratorSessionToken(request) ?? resolveSessionToken(request);
     if (!streamerId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    if (!sessionToken) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -251,6 +265,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     await fetchMutation(api.challenges.deleteSubChallenge, {
+      sessionToken,
       subChallengeId: subId as Id<'subChallenges'>,
     });
 

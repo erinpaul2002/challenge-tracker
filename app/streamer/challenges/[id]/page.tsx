@@ -12,8 +12,7 @@ import {
   Trash2,
   CheckCircle2,
   AlertCircle,
-  Minus,
-  Plus as PlusIcon
+  Minus
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, use, useEffect } from 'react';
@@ -155,12 +154,13 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
   };
 
   const confirmDeleteSubChallenge = async () => {
-    if (!subChallengeToDelete) return;
+    if (!subChallengeToDelete || !streamerSessionToken) return;
 
     setDeletingSubChallenge(subChallengeToDelete.id);
     setShowDeleteModal(false);
     try {
       await deleteSubChallengeMutation({
+        sessionToken: streamerSessionToken,
         subChallengeId: subChallengeToDelete.id as Id<'subChallenges'>,
       });
 
@@ -278,6 +278,13 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
   const confirmActionHandler = async () => {
     if (!confirmAction || !challenge) return;
 
+    if (!streamerSessionToken) {
+      setUpdatingChallenge(false);
+      setShowConfirmModal(false);
+      setConfirmAction(null);
+      return;
+    }
+
     if (confirmAction === 'terminate') {
       await confirmTerminateChallenge();
       return;
@@ -329,13 +336,14 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
   };
 
   const confirmTerminateChallenge = async () => {
-    if (!challenge) return;
+    if (!challenge || !streamerSessionToken) return;
 
     setUpdatingChallenge(true);
     setShowConfirmModal(false);
 
     try {
       await deleteChallengeMutation({
+        sessionToken: streamerSessionToken,
         challengeId,
       });
 
@@ -726,7 +734,7 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
                             disabled={isUpdating || sub.current_progress >= sub.target_limit}
                             className="w-8 h-8 flex items-center justify-center border border-gunmetal hover:border-tactical disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
-                            <PlusIcon size={12} />
+                            <Plus size={12} />
                           </button>
                         </div>
 

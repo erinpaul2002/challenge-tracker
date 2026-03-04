@@ -211,7 +211,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const streamerId = await getStreamerAccess(request);
+    const sessionToken =
+      resolveModeratorSessionToken(request) ?? resolveSessionToken(request);
     if (!streamerId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    if (!sessionToken) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -240,6 +248,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     await fetchMutation(api.challenges.deleteChallenge, {
+      sessionToken,
       challengeId: challengeId as Id<'challenges'>,
     });
 

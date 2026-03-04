@@ -27,8 +27,12 @@ export default function OverlayConnection({
     setOrigin(window.location.origin);
   }, []);
 
-  const overlayUrl = profile?.overlay_token && origin
-    ? `${origin}/overlay/${profile.overlay_token}`
+  const overlayPath = profile?.overlay_token
+    ? `/overlay/${profile.overlay_token}`
+    : '';
+
+  const overlayUrl = overlayPath
+    ? (origin ? `${origin}${overlayPath}` : overlayPath)
     : '';
 
   return (
@@ -66,6 +70,7 @@ export default function OverlayConnection({
               onClick={onCopy}
               className={`p-2 border transition-all ${copying ? 'bg-tactical text-void border-tactical' : 'bg-armor border-gunmetal hover:bg-tactical hover:text-void'}`}
               title="COPY_LINK"
+              aria-label="Copy overlay link"
             >
               <Copy size={14} />
             </button>
@@ -74,6 +79,7 @@ export default function OverlayConnection({
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 bg-armor hover:bg-white hover:text-void transition-all border border-gunmetal"
+              aria-label="Open overlay in new tab"
             >
               <ExternalLink size={14} />
             </a>

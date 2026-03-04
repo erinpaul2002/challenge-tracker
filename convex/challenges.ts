@@ -4,12 +4,12 @@ import { validateSessionToken } from "./auth";
 
 const UNAUTHORIZED_ERROR = "Unauthorized";
 
-const requireModeratorStreamerId = async (
+const requireSessionStreamerId = async (
   ctx: { db: any },
   sessionToken: string
 ) => {
   const session = await validateSessionToken(ctx, sessionToken);
-  if (!session || session.role !== "moderator") {
+  if (!session) {
     throw new Error(UNAUTHORIZED_ERROR);
   }
 
@@ -71,14 +71,20 @@ export const getChallengeWithSubs = query({
     sessionToken: v.string(),
   },
   handler: async (ctx, args) => {
-    const moderatorStreamerId = await requireModeratorStreamerId(
-      ctx,
-      args.sessionToken
-    );
+    let sessionStreamerId: Awaited<ReturnType<typeof requireSessionStreamerId>>;
+    try {
+      sessionStreamerId = await requireSessionStreamerId(ctx, args.sessionToken);
+    } catch {
+      return null;
+    }
 
     const challenge = await ctx.db.get(args.challengeId);
-    if (!challenge || challenge.streamerId !== moderatorStreamerId) {
-      throw new Error(UNAUTHORIZED_ERROR);
+    if (!challenge) {
+      return null;
+    }
+
+    if (challenge.streamerId !== sessionStreamerId) {
+      return null;
     }
 
     const subChallenges = await ctx.db
@@ -168,12 +174,12 @@ export const updateChallenge = mutation({
   handler: async (ctx, args) => {
     const { challengeId, sessionToken, ...updates } = args;
 
-    const moderatorStreamerId = await requireModeratorStreamerId(
+    const sessionStreamerId = await requireSessionStreamerId(
       ctx,
       sessionToken
     );
     const existingChallenge = await ctx.db.get(challengeId);
-    if (!existingChallenge || existingChallenge.streamerId !== moderatorStreamerId) {
+    if (!existingChallenge || existingChallenge.streamerId !== sessionStreamerId) {
       throw new Error(UNAUTHORIZED_ERROR);
     }
 
@@ -192,8 +198,21 @@ export const updateChallenge = mutation({
 
 // ── Delete a challenge (cascades to sub-challenges) ──────────────────
 export const deleteChallenge = mutation({
-  args: { challengeId: v.id("challenges") },
+  args: {
+    sessionToken: v.string(),
+    challengeId: v.id("challenges"),
+  },
   handler: async (ctx, args) => {
+    const sessionStreamerId = await requireSessionStreamerId(
+      ctx,
+      args.sessionToken
+    );
+
+    const existingChallenge = await ctx.db.get(args.challengeId);
+    if (!existingChallenge || existingChallenge.streamerId !== sessionStreamerId) {
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
+
     // Delete all sub-challenges first
     const subs = await ctx.db
       .query("subChallenges")
@@ -233,12 +252,12 @@ export const createSubChallenge = mutation({
     targetLimit: v.number(),
   },
   handler: async (ctx, args) => {
-    const moderatorStreamerId = await requireModeratorStreamerId(
+    const sessionStreamerId = await requireSessionStreamerId(
       ctx,
       args.sessionToken
     );
     const parentChallenge = await ctx.db.get(args.challengeId);
-    if (!parentChallenge || parentChallenge.streamerId !== moderatorStreamerId) {
+    if (!parentChallenge || parentChallenge.streamerId !== sessionStreamerId) {
       throw new Error(UNAUTHORIZED_ERROR);
     }
 
@@ -273,7 +292,7 @@ export const updateSubChallenge = mutation({
   handler: async (ctx, args) => {
     const { subChallengeId, sessionToken, ...updates } = args;
 
-    const moderatorStreamerId = await requireModeratorStreamerId(
+    const sessionStreamerId = await requireSessionStreamerId(
       ctx,
       sessionToken
     );
@@ -284,7 +303,7 @@ export const updateSubChallenge = mutation({
     }
 
     const parentChallenge = await ctx.db.get(existingSubChallenge.challengeId);
-    if (!parentChallenge || parentChallenge.streamerId !== moderatorStreamerId) {
+    if (!parentChallenge || parentChallenge.streamerId !== sessionStreamerId) {
       throw new Error(UNAUTHORIZED_ERROR);
     }
 
@@ -318,8 +337,26 @@ export const updateSubChallenge = mutation({
 });
 
 export const deleteSubChallenge = mutation({
-  args: { subChallengeId: v.id("subChallenges") },
+  args: {
+    sessionToken: v.string(),
+    subChallengeId: v.id("subChallenges"),
+  },
   handler: async (ctx, args) => {
+    const sessionStreamerId = await requireSessionStreamerId(
+      ctx,
+      args.sessionToken
+    );
+
+    const subChallenge = await ctx.db.get(args.subChallengeId);
+    if (!subChallenge) {
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
+
+    const parentChallenge = await ctx.db.get(subChallenge.challengeId);
+    if (!parentChallenge || parentChallenge.streamerId !== sessionStreamerId) {
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
+
     await ctx.db.delete(args.subChallengeId);
     return { success: true };
   },

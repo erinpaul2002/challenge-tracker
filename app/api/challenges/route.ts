@@ -80,7 +80,9 @@ const mapChallenge = (challenge: {
   reward_amount: challenge.rewardAmount,
   status: challenge.status,
   created_at: new Date(challenge._creationTime).toISOString(),
-  updated_at: new Date(challenge._creationTime).toISOString(),
+  // TODO(schema): Add an explicit `updatedAt` field to challenges so API callers
+  // can receive a true modification timestamp.
+  updated_at: undefined,
 });
 
 export async function GET(request: NextRequest) {

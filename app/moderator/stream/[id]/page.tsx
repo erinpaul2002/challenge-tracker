@@ -37,11 +37,18 @@ export default function StreamChallengeDetail({ params }: { params: Promise<{ id
 
     const getModeratorSessionToken = () => {
         const session = localStorage.getItem('moderator_session');
-        if (!session) return null;
+        const cookieToken = document.cookie
+            .split('; ')
+            .find((row) => row.startsWith('moderator_session='))
+            ?.split('=')[1];
+
+        if (!session) {
+            return cookieToken ? decodeURIComponent(cookieToken) : null;
+        }
 
         try {
-            const parsed = JSON.parse(session) as { session_token?: string };
-            return parsed.session_token ?? session;
+            const parsed = JSON.parse(session) as { session_token?: string; sessionToken?: string };
+            return parsed.session_token ?? parsed.sessionToken ?? (cookieToken ? decodeURIComponent(cookieToken) : null);
         } catch {
             return session;
         }
