@@ -1,5 +1,20 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { validateSessionToken } from "./auth";
+
+const UNAUTHORIZED_ERROR = "Unauthorized";
+
+const requireModeratorStreamerId = async (
+  ctx: { db: any },
+  sessionToken: string
+) => {
+  const session = await validateSessionToken(ctx, sessionToken);
+  if (!session || session.role !== "moderator") {
+    throw new Error(UNAUTHORIZED_ERROR);
+  }
+
+  return session.streamerId;
+};
 
 // ── Get all challenges for a streamer ────────────────────────────────
 export const getChallenges = query({
@@ -51,10 +66,20 @@ export const getChallenge = query({
 
 // ── Get challenge with sub-challenges ────────────────────────────────
 export const getChallengeWithSubs = query({
-  args: { challengeId: v.id("challenges") },
+  args: {
+    challengeId: v.id("challenges"),
+    sessionToken: v.string(),
+  },
   handler: async (ctx, args) => {
+    const moderatorStreamerId = await requireModeratorStreamerId(
+      ctx,
+      args.sessionToken
+    );
+
     const challenge = await ctx.db.get(args.challengeId);
-    if (!challenge) return null;
+    if (!challenge || challenge.streamerId !== moderatorStreamerId) {
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
 
     const subChallenges = await ctx.db
       .query("subChallenges")
@@ -124,6 +149,7 @@ export const createChallenge = mutation({
 // ── Update a challenge ───────────────────────────────────────────────
 export const updateChallenge = mutation({
   args: {
+    sessionToken: v.string(),
     challengeId: v.id("challenges"),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
@@ -140,7 +166,16 @@ export const updateChallenge = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const { challengeId, ...updates } = args;
+    const { challengeId, sessionToken, ...updates } = args;
+
+    const moderatorStreamerId = await requireModeratorStreamerId(
+      ctx,
+      sessionToken
+    );
+    const existingChallenge = await ctx.db.get(challengeId);
+    if (!existingChallenge || existingChallenge.streamerId !== moderatorStreamerId) {
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
 
     // Filter out undefined values
     const patch: Record<string, unknown> = {};
@@ -191,12 +226,22 @@ export const getSubChallenges = query({
 
 export const createSubChallenge = mutation({
   args: {
+    sessionToken: v.string(),
     challengeId: v.id("challenges"),
     title: v.string(),
     description: v.optional(v.string()),
     targetLimit: v.number(),
   },
   handler: async (ctx, args) => {
+    const moderatorStreamerId = await requireModeratorStreamerId(
+      ctx,
+      args.sessionToken
+    );
+    const parentChallenge = await ctx.db.get(args.challengeId);
+    if (!parentChallenge || parentChallenge.streamerId !== moderatorStreamerId) {
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
+
     const subId = await ctx.db.insert("subChallenges", {
       challengeId: args.challengeId,
       title: args.title,
@@ -211,6 +256,7 @@ export const createSubChallenge = mutation({
 
 export const updateSubChallenge = mutation({
   args: {
+    sessionToken: v.string(),
     subChallengeId: v.id("subChallenges"),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
@@ -225,11 +271,21 @@ export const updateSubChallenge = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const { subChallengeId, ...updates } = args;
+    const { subChallengeId, sessionToken, ...updates } = args;
+
+    const moderatorStreamerId = await requireModeratorStreamerId(
+      ctx,
+      sessionToken
+    );
 
     const existingSubChallenge = await ctx.db.get(subChallengeId);
     if (!existingSubChallenge) {
-      throw new Error("Sub-challenge not found");
+      throw new Error(UNAUTHORIZED_ERROR);
+    }
+
+    const parentChallenge = await ctx.db.get(existingSubChallenge.challengeId);
+    if (!parentChallenge || parentChallenge.streamerId !== moderatorStreamerId) {
+      throw new Error(UNAUTHORIZED_ERROR);
     }
 
     const patch: Record<string, unknown> = {};

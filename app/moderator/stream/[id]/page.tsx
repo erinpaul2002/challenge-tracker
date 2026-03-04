@@ -35,9 +35,30 @@ export default function StreamChallengeDetail({ params }: { params: Promise<{ id
     const resolvedParams = use(params);
     const challengeId = resolvedParams.id as Id<'challenges'>;
 
-    const challengeFromQuery = useQuery(api.challenges.getChallengeWithSubs, {
-        challengeId,
-    });
+    const getModeratorSessionToken = () => {
+        const session = localStorage.getItem('moderator_session');
+        if (!session) return null;
+
+        try {
+            const parsed = JSON.parse(session) as { session_token?: string };
+            return parsed.session_token ?? session;
+        } catch {
+            return session;
+        }
+    };
+
+    const moderatorSessionToken =
+        typeof window !== 'undefined' ? getModeratorSessionToken() : null;
+
+    const challengeFromQuery = useQuery(
+        api.challenges.getChallengeWithSubs,
+        moderatorSessionToken
+            ? {
+                challengeId,
+                sessionToken: moderatorSessionToken,
+            }
+            : 'skip'
+    );
 
     const updateChallengeMutation = useMutation(api.challenges.updateChallenge);
     const createSubChallengeMutation = useMutation(api.challenges.createSubChallenge);
@@ -137,6 +158,7 @@ export default function StreamChallengeDetail({ params }: { params: Promise<{ id
     }, [challengeFromQuery, router]);
 
     const updateSubProgress = async (subId: string, increment: number) => {
+        if (!moderatorSessionToken) return;
         const subChallenge = subChallenges.find(s => s.id === subId);
         if (!subChallenge) return;
 
@@ -145,6 +167,7 @@ export default function StreamChallengeDetail({ params }: { params: Promise<{ id
 
         try {
             await updateSubChallengeMutation({
+                sessionToken: moderatorSessionToken,
                 subChallengeId: subId as Id<'subChallenges'>,
                 currentProgress: newProgress,
                 status: newProgress >= subChallenge.target_limit ? 'completed' : 'active',
@@ -172,10 +195,12 @@ export default function StreamChallengeDetail({ params }: { params: Promise<{ id
     };
 
     const addQuickSubChallenge = async () => {
+        if (!moderatorSessionToken) return;
         if (!newSubTitle.trim() || newSubTarget < 1) return;
 
         try {
             const subChallengeId = await createSubChallengeMutation({
+                sessionToken: moderatorSessionToken,
                 challengeId,
                 title: newSubTitle.trim(),
                 targetLimit: newSubTarget,
@@ -204,10 +229,12 @@ export default function StreamChallengeDetail({ params }: { params: Promise<{ id
     };
 
     const completeChallenge = async () => {
+        if (!moderatorSessionToken) return;
         if (!challenge || completingChallenge) return;
         setCompletingChallenge(true);
         try {
             await updateChallengeMutation({
+                sessionToken: moderatorSessionToken,
                 challengeId,
                 status: 'completed',
             });
@@ -221,10 +248,12 @@ export default function StreamChallengeDetail({ params }: { params: Promise<{ id
     };
 
     const failChallenge = async () => {
+        if (!moderatorSessionToken) return;
         if (!challenge || failingChallenge) return;
         setFailingChallenge(true);
         try {
             await updateChallengeMutation({
+                sessionToken: moderatorSessionToken,
                 challengeId,
                 status: 'cancelled',
             });
@@ -238,10 +267,12 @@ export default function StreamChallengeDetail({ params }: { params: Promise<{ id
     };
 
     const activateChallenge = async () => {
+        if (!moderatorSessionToken) return;
         if (!challenge || activatingChallenge) return;
         setActivatingChallenge(true);
         try {
             await updateChallengeMutation({
+                sessionToken: moderatorSessionToken,
                 challengeId,
                 status: 'active',
             });

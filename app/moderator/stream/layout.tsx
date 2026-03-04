@@ -9,9 +9,13 @@ function StreamRedirectLogic() {
     const searchParams = useSearchParams();
 
     useEffect(() => {
-        const challengesPath = pathname.startsWith('/moderator/stream')
-            ? pathname.replace('/moderator/stream', '/moderator/challenges')
-            : '/moderator/challenges';
+        const isBaseStreamPath = pathname === '/moderator/stream' || pathname === '/moderator/stream/';
+
+        if (!isBaseStreamPath) {
+            return;
+        }
+
+        const challengesPath = '/moderator/challenges';
         const queryString = searchParams.toString();
         const target = queryString ? `${challengesPath}?${queryString}` : challengesPath;
         router.replace(target);
@@ -21,10 +25,10 @@ function StreamRedirectLogic() {
 }
 
 export default function StreamModeLayout({ children }: { children: ReactNode }) {
-    void children;
     return (
         <Suspense fallback={null}>
             <StreamRedirectLogic />
+            {children}
         </Suspense>
     );
 }

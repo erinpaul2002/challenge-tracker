@@ -58,9 +58,30 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
   const resolvedParams = use(params);
   const challengeId = resolvedParams.id as Id<'challenges'>;
 
-  const challengeFromQuery = useQuery(api.challenges.getChallengeWithSubs, {
-    challengeId,
-  });
+  const getStreamerSessionToken = () => {
+    const session = localStorage.getItem('streamer_session');
+    if (!session) return null;
+
+    try {
+      const parsed = JSON.parse(session) as { session_token?: string };
+      return parsed.session_token ?? session;
+    } catch {
+      return session;
+    }
+  };
+
+  const streamerSessionToken =
+    typeof window !== 'undefined' ? getStreamerSessionToken() : null;
+
+  const challengeFromQuery = useQuery(
+    api.challenges.getChallengeWithSubs,
+    streamerSessionToken
+      ? {
+        challengeId,
+        sessionToken: streamerSessionToken,
+      }
+      : 'skip'
+  );
 
   const updateSubChallengeMutation = useMutation(api.challenges.updateSubChallenge);
   const deleteSubChallengeMutation = useMutation(api.challenges.deleteSubChallenge);
@@ -93,6 +114,7 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
   const [editTargetLimit, setEditTargetLimit] = useState(1);
 
   const updateSubChallengeProgress = async (subId: string, newProgress: number) => {
+    if (!streamerSessionToken) return;
     if (!challenge) return;
 
     const subChallenge = challenge.sub_challenges.find((sub) => sub.id === subId);
@@ -103,6 +125,7 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
     setUpdatingProgress(subId);
     try {
       await updateSubChallengeMutation({
+        sessionToken: streamerSessionToken,
         subChallengeId: subId as Id<'subChallenges'>,
         currentProgress: boundedProgress,
       });
@@ -199,11 +222,13 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
   };
 
   const updateChallenge = async () => {
+    if (!streamerSessionToken) return;
     if (!editChallengeTitle.trim() || !challenge) return;
 
     setUpdatingChallenge(true);
     try {
       await updateChallengeMutation({
+        sessionToken: streamerSessionToken,
         challengeId,
         title: editChallengeTitle.trim(),
         description: editChallengeDescription.trim() || undefined,
@@ -274,6 +299,7 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
 
     try {
       await updateChallengeMutation({
+        sessionToken: streamerSessionToken,
         challengeId,
         status: newStatus,
       });
@@ -325,11 +351,13 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
   };
 
   const createSubChallenge = async () => {
+    if (!streamerSessionToken) return;
     if (!newSubTitle.trim() || !challenge) return;
 
     setCreatingSubChallenge(true);
     try {
       const newSubId = await createSubChallengeMutation({
+        sessionToken: streamerSessionToken,
         challengeId,
         title: newSubTitle.trim(),
         description: newSubDescription.trim() || undefined,
@@ -380,11 +408,13 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
   };
 
   const saveSubChallengeEdit = async () => {
+    if (!streamerSessionToken) return;
     if (!editingSubChallenge || !editTitle.trim()) return;
 
     setUpdatingProgress(editingSubChallenge.id);
     try {
       await updateSubChallengeMutation({
+        sessionToken: streamerSessionToken,
         subChallengeId: editingSubChallenge.id as Id<'subChallenges'>,
         title: editTitle.trim(),
         description: editDescription.trim() || undefined,

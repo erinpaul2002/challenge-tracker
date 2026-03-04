@@ -28,7 +28,7 @@ const TABS: { id: OverlayTab; label: string; icon: LucideIcon }[] = [
 
 export default function OverlayTabs({ activeTab, onTabChange, profile, loading, generating, copying, onGenerateToken, onCopy }: OverlayTabsProps) {
     const overlayUrl = profile?.overlay_token
-        ? `${window.location.origin}/overlay/${profile.overlay_token}`
+        ? `/overlay/${profile.overlay_token}`
         : '';
 
     return (
@@ -75,7 +75,7 @@ export default function OverlayTabs({ activeTab, onTabChange, profile, loading, 
                         <div className="flex items-center gap-1.5 px-2 py-1 bg-void/60 border border-gunmetal/60 rounded-sm">
                             <MonitorPlay size={11} className="text-tactical flex-shrink-0" />
                             <span className="text-[9px] font-mono text-dimmed truncate max-w-[160px] hidden lg:block">
-                                {overlayUrl.replace(/^https?:\/\//, '')}
+                                {overlayUrl}
                             </span>
                             <span className="text-[9px] font-mono text-tactical lg:hidden">LINK</span>
                         </div>

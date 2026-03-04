@@ -23,6 +23,18 @@ const resolveSessionToken = (request: NextRequest): string | null => {
   }
 };
 
+const resolveModeratorSessionToken = (request: NextRequest): string | null => {
+  const headerToken = request.headers.get('x-moderator-session')?.trim();
+  if (headerToken) {
+    return headerToken;
+  }
+
+  const cookieValue = request.cookies.get('moderator_session')?.value;
+  if (!cookieValue) return null;
+
+  return decodeURIComponent(cookieValue);
+};
+
 const getStreamerAccess = async (request: NextRequest): Promise<string | null> => {
   const token = resolveSessionToken(request);
   if (token) {
@@ -32,14 +44,19 @@ const getStreamerAccess = async (request: NextRequest): Promise<string | null> =
     }
   }
 
-  const moderatorSession = request.headers.get('x-moderator-session');
-  if (!moderatorSession) return null;
+  const moderatorToken = resolveModeratorSessionToken(request);
+  if (!moderatorToken) return null;
 
   try {
-    const parsed = JSON.parse(moderatorSession) as { streamer_id?: string };
-    return parsed.streamer_id ?? null;
+    const session = await fetchQuery(api.auth.validateSession, { token: moderatorToken });
+    if (session?.type === 'moderator') {
+      return session.streamerId;
+    }
+
+    console.warn('Moderator session verification failed: token invalid, expired, or not a moderator session');
+    return null;
   } catch (error) {
-    console.error('Invalid moderator session:', error);
+    console.error('Moderator session verification error:', error);
     return null;
   }
 };
@@ -120,7 +137,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const streamerId = await getStreamerAccess(request);
+    const sessionToken =
+      resolveModeratorSessionToken(request) ?? resolveSessionToken(request);
     if (!streamerId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    if (!sessionToken) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -158,6 +183,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { title, description, target_limit, current_progress, status } = body;
 
     const subChallenge = await fetchMutation(api.challenges.updateSubChallenge, {
+      sessionToken,
       subChallengeId: subId as Id<'subChallenges'>,
       title: title !== undefined ? title : undefined,
       description: description !== undefined ? description : undefined,

@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Particles, { initParticlesEngine } from '@tsparticles/react';

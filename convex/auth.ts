@@ -9,6 +9,67 @@ import {
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 
+export type ValidatedSession =
+  | {
+      role: "streamer";
+      type: "streamer";
+      streamerId: Id<"streamers">;
+      name: string;
+      email: string;
+      channelName?: string;
+    }
+  | {
+      role: "moderator";
+      type: "moderator";
+      moderatorId: Id<"moderators">;
+      streamerId: Id<"streamers">;
+      streamerName?: string;
+      streamerChannel?: string;
+    };
+
+export const validateSessionToken = async (
+  ctx: { db: any },
+  token: string
+): Promise<ValidatedSession | null> => {
+  const session = await ctx.db
+    .query("sessions")
+    .withIndex("by_token", (q: any) => q.eq("token", token))
+    .unique();
+
+  if (!session || session.expiresAt < Date.now()) {
+    return null;
+  }
+
+  if (session.streamerId) {
+    const streamer = await ctx.db.get(session.streamerId);
+    if (!streamer) return null;
+    return {
+      role: "streamer",
+      type: "streamer",
+      streamerId: streamer._id,
+      name: streamer.name,
+      email: streamer.email,
+      channelName: streamer.channelName,
+    };
+  }
+
+  if (session.moderatorId) {
+    const moderator = await ctx.db.get(session.moderatorId);
+    if (!moderator) return null;
+    const streamer = await ctx.db.get(moderator.streamerId);
+    return {
+      role: "moderator",
+      type: "moderator",
+      moderatorId: moderator._id,
+      streamerId: moderator.streamerId,
+      streamerName: streamer?.name,
+      streamerChannel: streamer?.channelName,
+    };
+  }
+
+  return null;
+};
+
 // ── Sign Up (streamer) ───────────────────────────────────────────────
 export const signUpStreamer: ReturnType<typeof action> = action({
   args: {
@@ -180,41 +241,7 @@ export const signOut = mutation({
 export const validateSession = query({
   args: { token: v.string() },
   handler: async (ctx, args) => {
-    const session = await ctx.db
-      .query("sessions")
-      .withIndex("by_token", (q) => q.eq("token", args.token))
-      .unique();
-
-    if (!session || session.expiresAt < Date.now()) {
-      return null;
-    }
-
-    if (session.streamerId) {
-      const streamer = await ctx.db.get(session.streamerId);
-      if (!streamer) return null;
-      return {
-        type: "streamer" as const,
-        streamerId: streamer._id,
-        name: streamer.name,
-        email: streamer.email,
-        channelName: streamer.channelName,
-      };
-    }
-
-    if (session.moderatorId) {
-      const moderator = await ctx.db.get(session.moderatorId);
-      if (!moderator) return null;
-      const streamer = await ctx.db.get(moderator.streamerId);
-      return {
-        type: "moderator" as const,
-        moderatorId: moderator._id,
-        streamerId: moderator.streamerId,
-        streamerName: streamer?.name,
-        streamerChannel: streamer?.channelName,
-      };
-    }
-
-    return null;
+    return await validateSessionToken(ctx, args.token);
   },
 });
 

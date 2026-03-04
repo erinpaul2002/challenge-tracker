@@ -1,6 +1,8 @@
+"use client";
+
 import { MonitorPlay, Copy, ExternalLink, Key, RotateCcw, Download, Upload } from 'lucide-react';
 import { StreamerProfile, DEFAULT_OVERLAY_CONFIG } from '../types';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface OverlayConnectionProps {
   profile: StreamerProfile | null;
@@ -19,8 +21,14 @@ export default function OverlayConnection({
   onGenerateToken,
   onCopy,
 }: OverlayConnectionProps) {
-  const overlayUrl = profile?.overlay_token
-    ? `${window.location.origin}/overlay/${profile.overlay_token}`
+  const [origin, setOrigin] = useState('');
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const overlayUrl = profile?.overlay_token && origin
+    ? `${origin}/overlay/${profile.overlay_token}`
     : '';
 
   return (

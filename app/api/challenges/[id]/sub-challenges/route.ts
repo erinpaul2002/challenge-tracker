@@ -31,14 +31,22 @@ const getStreamerAccess = async (request: NextRequest): Promise<string | null> =
     }
   }
 
-  const moderatorSession = request.headers.get('x-moderator-session');
-  if (!moderatorSession) return null;
+  const moderatorToken = request.headers.get('x-moderator-session')?.trim();
+  if (!moderatorToken) {
+    console.warn('Moderator session token missing');
+    return null;
+  }
 
   try {
-    const parsed = JSON.parse(moderatorSession) as { streamer_id?: string };
-    return parsed.streamer_id ?? null;
-  } catch (error) {
-    console.error('Invalid moderator session:', error);
+    const moderatorSession = await fetchQuery(api.auth.validateSession, { token: moderatorToken });
+    if (moderatorSession?.type === 'moderator') {
+      return moderatorSession.streamerId;
+    }
+
+    console.warn('Moderator session verification failed: invalid, expired, or unauthorized');
+    return null;
+  } catch {
+    console.warn('Moderator session verification error');
     return null;
   }
 };
@@ -116,7 +124,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const streamerId = await getStreamerAccess(request);
+    const sessionToken =
+      request.headers.get('x-moderator-session')?.trim() ?? resolveSessionToken(request);
     if (!streamerId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    if (!sessionToken) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -156,6 +172,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     const subChallengeId = await fetchMutation(api.challenges.createSubChallenge, {
+      sessionToken,
       challengeId: challengeId as Id<'challenges'>,
       title,
       description,

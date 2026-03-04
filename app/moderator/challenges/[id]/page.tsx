@@ -46,9 +46,30 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
   const resolvedParams = use(params);
   const challengeId = resolvedParams.id as Id<'challenges'>;
 
-  const challengeFromQuery = useQuery(api.challenges.getChallengeWithSubs, {
-    challengeId,
-  });
+  const getModeratorSessionToken = () => {
+    const session = localStorage.getItem('moderator_session');
+    if (!session) return null;
+
+    try {
+      const parsed = JSON.parse(session) as { session_token?: string };
+      return parsed.session_token ?? session;
+    } catch {
+      return session;
+    }
+  };
+
+  const moderatorSessionToken =
+    typeof window !== 'undefined' ? getModeratorSessionToken() : null;
+
+  const challengeFromQuery = useQuery(
+    api.challenges.getChallengeWithSubs,
+    moderatorSessionToken
+      ? {
+        challengeId,
+        sessionToken: moderatorSessionToken,
+      }
+      : 'skip'
+  );
 
   const updateChallengeMutation = useMutation(api.challenges.updateChallenge);
   const deleteChallengeMutation = useMutation(api.challenges.deleteChallenge);
@@ -152,6 +173,7 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
   }, [challengeFromQuery]);
 
   const updateSubProgress = async (subId: string, increment: number) => {
+    if (!moderatorSessionToken) return;
     const subChallenge = subChallenges.find(s => s.id === subId);
     if (!subChallenge) return;
 
@@ -159,6 +181,7 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
 
     try {
       await updateSubChallengeMutation({
+        sessionToken: moderatorSessionToken,
         subChallengeId: subId as Id<'subChallenges'>,
         currentProgress: newProgress,
         status: newProgress >= subChallenge.target_limit ? 'completed' : 'active',
@@ -185,10 +208,12 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
   };
 
   const addQuickSubChallenge = async () => {
+    if (!moderatorSessionToken) return;
     if (!newSubTitle.trim() || newSubTarget < 1) return;
 
     try {
       const subChallengeId = await createSubChallengeMutation({
+        sessionToken: moderatorSessionToken,
         challengeId,
         title: newSubTitle.trim(),
         targetLimit: newSubTarget,
@@ -237,11 +262,13 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
   };
 
   const updateChallenge = async () => {
+    if (!moderatorSessionToken) return;
     if (!editChallengeTitle.trim() || !challenge) return;
 
     setUpdatingChallenge(true);
     try {
       await updateChallengeMutation({
+        sessionToken: moderatorSessionToken,
         challengeId,
         title: editChallengeTitle.trim(),
         description: editChallengeDescription.trim() || undefined,
@@ -290,6 +317,7 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
   };
 
   const saveSubChallengeEdit = async () => {
+    if (!moderatorSessionToken) return;
     if (!editingSubChallenge || !editSubTitle.trim()) return;
 
     // Validate that target limit is not less than current progress
@@ -300,6 +328,7 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
 
     try {
       await updateSubChallengeMutation({
+        sessionToken: moderatorSessionToken,
         subChallengeId: editingSubChallenge.id as Id<'subChallenges'>,
         title: editSubTitle.trim(),
         description: editSubDescription.trim() || undefined,
@@ -368,11 +397,13 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
   };
 
   const completeChallenge = async () => {
+    if (!moderatorSessionToken) return;
     if (!challenge) return;
 
     setCompletingChallenge(true);
     try {
       await updateChallengeMutation({
+        sessionToken: moderatorSessionToken,
         challengeId,
         status: 'completed',
       });
@@ -387,11 +418,13 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
   };
 
   const failChallenge = async () => {
+    if (!moderatorSessionToken) return;
     if (!challenge) return;
 
     setFailingChallenge(true);
     try {
       await updateChallengeMutation({
+        sessionToken: moderatorSessionToken,
         challengeId,
         status: 'cancelled',
       });
@@ -406,11 +439,13 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
   };
 
   const activateChallenge = async () => {
+    if (!moderatorSessionToken) return;
     if (!challenge) return;
 
     setActivatingChallenge(true);
     try {
       await updateChallengeMutation({
+        sessionToken: moderatorSessionToken,
         challengeId,
         status: 'active',
       });

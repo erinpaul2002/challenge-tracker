@@ -10,9 +10,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { Id } from '@/convex/_generated/dataModel';
 
 interface CreateSubChallengeData {
   title: string;
@@ -34,8 +31,6 @@ interface SubChallengeFormData extends CreateSubChallengeData {
 }
 
 export default function NewChallengePage() {
-  const createChallengeMutation = useMutation(api.challenges.createChallenge);
-
   const [formData, setFormData] = useState<CreateChallengeData>({
     title: '',
     description: '',
@@ -102,33 +97,32 @@ export default function NewChallengePage() {
     }
 
     try {
-      const session = localStorage.getItem('moderator_session');
-      if (!session) {
-        setError('No moderator session found');
-        setIsSubmitting(false);
-        return;
-      }
-
-      const parsedSession = JSON.parse(session) as { streamer_id?: string };
-      if (!parsedSession.streamer_id) {
-        setError('Invalid moderator session. Please sign in again.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      await createChallengeMutation({
-        streamerId: parsedSession.streamer_id as Id<'streamers'>,
+      const response = await fetch('/api/challenges', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
         title: formData.title.trim(),
         description: formData.description?.trim() || undefined,
-        givenBy: formData.given_by?.trim() || undefined,
+        given_by: formData.given_by?.trim() || undefined,
         deadline: formData.deadline?.trim() || undefined,
-        rewardAmount: formData.reward_amount?.trim() || undefined,
+        reward_amount: formData.reward_amount?.trim() || undefined,
         subChallenges: validSubChallenges.map(({ id, tempTargetLimit, ...sub }) => ({
           title: sub.title.trim(),
           description: sub.description?.trim() || undefined,
-          targetLimit: sub.target_limit,
+          target_limit: sub.target_limit,
         })),
+        }),
       });
+
+      if (!response.ok) {
+        const errorPayload = (await response.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        setError(errorPayload?.error ?? 'Unable to create challenge. Please sign in again.');
+        return;
+      }
 
       setSuccess(true);
       // Reset form
