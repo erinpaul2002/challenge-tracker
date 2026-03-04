@@ -2,7 +2,7 @@
   "name": "challenge-tracker",
   "version": "0.1.0",
   "scripts": {
-    "dev": "next dev",
+    "dev": "concurrently \"next dev\" \"npx convex dev\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -10,20 +10,28 @@
     "test:watch": "vitest",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
-    "test:coverage": "vitest run --coverage",
-    "test:supabase": "npx tsx tests/test-supabase-connection.ts",
-    "test:add-challenges": "npx tsx tests/test-add-challenges.ts"
+    "test:coverage": "vitest run --coverage"
   },
   "license": "MIT",
   "dependencies": {
-    "@supabase/ssr": "^0.8.0",
-    "@supabase/supabase-js": "^2.89.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
+    "@tsparticles/engine": "^3.9.1",
+    "@tsparticles/react": "^3.0.0",
+    "@tsparticles/slim": "^3.9.1",
+    "@types/three": "^0.183.1",
     "bcryptjs": "^3.0.3",
+    "clsx": "^2.1.1",
+    "convex": "^1.32.0",
+    "framer-motion": "^12.34.3",
+    "gsap": "^3.14.2",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "zustand": "^5.0.9"
+    "tailwind-merge": "^3.5.0",
+    "three": "^0.183.1",
+    "tsparticles": "^3.9.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -34,6 +42,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.1.2",
+    "concurrently": "^8.2.2",
     "dotenv": "^16.4.5",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",

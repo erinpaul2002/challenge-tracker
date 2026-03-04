@@ -13,7 +13,7 @@ Thank you for your interest in contributing to Challenge Tracker! We welcome con
 1. Fork the repository
 2. Clone your fork: `git clone https://github.com/your-username/challenge-tracker.git`
 3. Install dependencies: `npm install`
-4. Set up your Supabase project (see README.md)
+4. Set up your Convex environment (see README.md)
 5. Create a feature branch: `git checkout -b feature/your-feature-name`
 6. Make your changes
 7. Run tests: `npm test`

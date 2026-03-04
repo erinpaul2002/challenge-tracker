@@ -1015,7 +1015,6 @@ main (production)
 | Migrate to SWR/React Query | Better cache management | Post-MVP |
 | Add unit tests (coverage > 70%) | Reduce regressions | Post-MVP |
 | Migrate overlay to custom React component | Better styling control | Post-MVP |
-| Add dark mode | User request | Post-MVP |
 | Implement subscriber submissions | Feature expansion | Post-MVP |
 
 ---
