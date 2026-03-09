@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Sword,
+  BarChart3,
   Users,
   MonitorPlay,
   UserCircle,
@@ -19,6 +20,7 @@ import { useRouter } from 'next/navigation';
 const navItems = [
   { name: 'DASHBOARD', icon: LayoutDashboard, href: '/streamer/dashboard' },
   { name: 'CHALLENGES', icon: Sword, href: '/streamer/challenges' },
+  { name: 'SCOREBOARD', icon: BarChart3, href: '/streamer/scoreboard' },
   { name: 'MODERATORS', icon: Users, href: '/streamer/moderator' },
   { name: 'OVERLAY', icon: MonitorPlay, href: '/streamer/overlay' },
   { name: 'PROFILE', icon: UserCircle, href: '/streamer/profile' },
