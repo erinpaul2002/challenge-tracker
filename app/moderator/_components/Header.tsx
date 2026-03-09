@@ -2,16 +2,8 @@
 
 import { usePathname } from 'next/navigation';
 import { Cpu, UserCheck, LogOut, Menu } from 'lucide-react';
-import { useState } from 'react';
 import { authService } from '@/services/authService';
-
-interface ModeratorSession {
-  moderator_id: string;
-  streamer_id: string;
-  streamer_name: string;
-  streamer_channel: string;
-  created_at: string;
-}
+import { useAuthStore } from '@/stores/authStore';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -19,18 +11,10 @@ interface HeaderProps {
 
 export default function Header({ onToggleSidebar }: HeaderProps) {
   const pathname = usePathname();
-  const [moderatorSession] = useState<ModeratorSession | null>(() => {
-    if (typeof window === 'undefined') return null;
-
-    const session = window.localStorage.getItem('moderator_session');
-    if (!session) return null;
-
-    try {
-      return JSON.parse(session) as ModeratorSession;
-    } catch {
-      return null;
-    }
-  });
+  const { profile, hydrated } = useAuthStore();
+  const moderatorDisplayName = hydrated && profile?.name?.trim()
+    ? profile.name
+    : 'MODERATOR_01';
 
   const handleSignOut = () => {
     void (async () => {
@@ -73,7 +57,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         <div className="flex items-center gap-2 md:gap-4">
           <div className="text-right hidden sm:block">
             <div className="text-xs font-chakra font-bold leading-none uppercase">
-              {moderatorSession?.streamer_name || 'MODERATOR_01'}
+              {moderatorDisplayName}
             </div>
             <div className="text-[10px] text-terminal font-mono leading-none mt-1 uppercase flex items-center justify-end gap-1">
               <UserCheck size={10} />

@@ -110,6 +110,7 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
   const [editingSubChallenge, setEditingSubChallenge] = useState<SubChallenge | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [editCurrentProgress, setEditCurrentProgress] = useState(0);
   const [editTargetLimit, setEditTargetLimit] = useState(1);
 
   const updateSubChallengeProgress = async (subId: string, newProgress: number) => {
@@ -405,6 +406,7 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
     setEditingSubChallenge(subChallenge);
     setEditTitle(subChallenge.title);
     setEditDescription(subChallenge.description || '');
+    setEditCurrentProgress(subChallenge.current_progress);
     setEditTargetLimit(subChallenge.target_limit);
     setShowEditModal(true);
   };
@@ -414,6 +416,7 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
     setEditingSubChallenge(null);
     setEditTitle('');
     setEditDescription('');
+    setEditCurrentProgress(0);
     setEditTargetLimit(1);
   };
 
@@ -421,14 +424,17 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
     if (!streamerSessionToken) return;
     if (!editingSubChallenge || !editTitle.trim()) return;
 
-    const latestSubChallenge = challenge?.sub_challenges.find((sub) => sub.id === editingSubChallenge.id) ?? editingSubChallenge;
-    const currentProgress = latestSubChallenge.current_progress;
-    if (editTargetLimit < currentProgress) {
+    if (editCurrentProgress < 0) {
+      alert('Current progress cannot be less than zero.');
+      return;
+    }
+
+    if (editTargetLimit < editCurrentProgress) {
       alert('Target limit cannot be less than current progress. Please increase target or decrease progress first.');
       return;
     }
 
-    const nextStatus: SubChallenge['status'] = currentProgress >= editTargetLimit ? 'completed' : 'active';
+    const nextStatus: SubChallenge['status'] = editCurrentProgress >= editTargetLimit ? 'completed' : 'active';
 
     setUpdatingProgress(editingSubChallenge.id);
     try {
@@ -437,6 +443,7 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
         subChallengeId: editingSubChallenge.id as Id<'subChallenges'>,
         title: editTitle.trim(),
         description: editDescription.trim() || undefined,
+        currentProgress: editCurrentProgress,
         targetLimit: editTargetLimit,
         status: nextStatus,
       });
@@ -449,6 +456,7 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
             ...sub,
             title: editTitle.trim(),
             description: editDescription.trim() || undefined,
+            current_progress: editCurrentProgress,
             target_limit: editTargetLimit,
             status: nextStatus,
           } : sub
@@ -458,6 +466,7 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
       setEditingSubChallenge(null);
       setEditTitle('');
       setEditDescription('');
+      setEditCurrentProgress(0);
       setEditTargetLimit(1);
     } catch (error) {
       console.error('Error updating sub-challenge:', error);
@@ -883,6 +892,20 @@ export default function ChallengeDetailPage({ params }: { params: Promise<{ id: 
                   className="w-full bg-void border border-tactical text-hud px-4 py-3 font-mono text-sm focus:outline-none focus:border-terminal resize-none"
                   placeholder="Optional description..."
                   rows={3}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-chakra font-bold mb-2 text-hud">
+                  CURRENT_PROGRESS
+                </label>
+                <input
+                  type="number"
+                  value={editCurrentProgress}
+                  onChange={(e) => setEditCurrentProgress(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-full bg-void border border-tactical text-hud px-4 py-3 font-chakra font-bold focus:outline-none focus:border-terminal"
+                  placeholder="Current progress..."
+                  min="0"
                 />
               </div>
 

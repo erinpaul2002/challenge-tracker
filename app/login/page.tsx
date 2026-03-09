@@ -216,7 +216,7 @@ export default function LoginPage() {
               <>
                 <div className="space-y-1">
                   <label className="text-[10px] text-tactical font-bold uppercase tracking-widest ml-1">
-                    Identification [Email]
+                    Email
                   </label>
                   <input
                     type="email"
@@ -224,7 +224,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="input-tactical w-full"
-                    placeholder="streamer@channel.com"
+                    placeholder="streamer@gmail.com"
                   />
                 </div>
               </>
@@ -245,7 +245,7 @@ export default function LoginPage() {
 
             <div className="space-y-1">
               <label className="text-[10px] text-tactical font-bold uppercase tracking-widest ml-1">
-                Access Key [Password]
+                Password
               </label>
               <input
                 type="password"

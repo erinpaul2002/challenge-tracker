@@ -150,13 +150,13 @@ export default function SignupPage() {
                 value={formData.channel_name}
                 onChange={handleChange}
                 className="input-tactical w-full"
-                placeholder="@TWITCH_HANDLE"
+                placeholder="@YOUTUBE_CHANNEL"
               />
             </div>
 
             <div className="space-y-1 md:col-span-2">
               <label className="text-[10px] text-tactical font-bold uppercase tracking-widest ml-1">
-                Comm-Link [Email]
+                Email
               </label>
               <input
                 name="email"
@@ -165,13 +165,13 @@ export default function SignupPage() {
                 value={formData.email}
                 onChange={handleChange}
                 className="input-tactical w-full"
-                placeholder="streamer@channel.com"
+                placeholder="streamer@gmail.com"
               />
             </div>
 
             <div className="space-y-1">
               <label className="text-[10px] text-tactical font-bold uppercase tracking-widest ml-1">
-                Encription Key
+                Password
               </label>
               <input
                 name="password"
@@ -186,7 +186,7 @@ export default function SignupPage() {
 
             <div className="space-y-1">
               <label className="text-[10px] text-tactical font-bold uppercase tracking-widest ml-1">
-                Verify Key
+                Confirm Password
               </label>
               <input
                 name="confirmPassword"

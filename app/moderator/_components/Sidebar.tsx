@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Sword,
+  Crosshair,
   LogOut,
   ChevronRight,
   Shield,
@@ -16,6 +17,7 @@ import { authService } from '@/services/authService';
 const navItems = [
   { name: 'DASHBOARD', icon: LayoutDashboard, href: '/moderator/dashboard' },
   { name: 'CHALLENGES', icon: Sword, href: '/moderator/challenges' },
+  { name: 'PROGRESS', icon: Crosshair, href: '/moderator/progress' },
 ];
 
 interface SidebarProps {

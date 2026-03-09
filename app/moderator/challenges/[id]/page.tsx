@@ -97,6 +97,7 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
   const [editingSubChallenge, setEditingSubChallenge] = useState<SubChallenge | null>(null);
   const [editSubTitle, setEditSubTitle] = useState('');
   const [editSubDescription, setEditSubDescription] = useState('');
+  const [editSubCurrentProgress, setEditSubCurrentProgress] = useState(0);
   const [editSubTargetLimit, setEditSubTargetLimit] = useState(1);
 
   // Delete sub-challenge states
@@ -319,6 +320,7 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
     setEditingSubChallenge(subChallenge);
     setEditSubTitle(subChallenge.title);
     setEditSubDescription(subChallenge.description || '');
+    setEditSubCurrentProgress(subChallenge.current_progress);
     setEditSubTargetLimit(subChallenge.target_limit);
     setShowEditSubModal(true);
   };
@@ -328,6 +330,7 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
     setEditingSubChallenge(null);
     setEditSubTitle('');
     setEditSubDescription('');
+    setEditSubCurrentProgress(0);
     setEditSubTargetLimit(1);
   };
 
@@ -335,11 +338,18 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
     if (!moderatorSessionToken) return;
     if (!editingSubChallenge || !editSubTitle.trim()) return;
 
+    if (editSubCurrentProgress < 0) {
+      alert('Current progress cannot be less than zero.');
+      return;
+    }
+
     // Validate that target limit is not less than current progress
-    if (editSubTargetLimit < editingSubChallenge.current_progress) {
+    if (editSubTargetLimit < editSubCurrentProgress) {
       alert('Target limit cannot be less than current progress. Please adjust the target limit or reduce progress first.');
       return;
     }
+
+    const nextStatus: SubChallenge['status'] = editSubCurrentProgress >= editSubTargetLimit ? 'completed' : 'active';
 
     try {
       await updateSubChallengeMutation({
@@ -347,7 +357,9 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
         subChallengeId: editingSubChallenge.id as Id<'subChallenges'>,
         title: editSubTitle.trim(),
         description: editSubDescription.trim() || undefined,
+        currentProgress: editSubCurrentProgress,
         targetLimit: editSubTargetLimit,
+        status: nextStatus,
       });
 
       // Update local state
@@ -357,7 +369,9 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
             ...sub,
             title: editSubTitle.trim(),
             description: editSubDescription.trim() || undefined,
-            target_limit: editSubTargetLimit
+            current_progress: editSubCurrentProgress,
+            target_limit: editSubTargetLimit,
+            status: nextStatus,
           } : sub
         );
         // Update challenge progress based on new sub-challenge data
@@ -368,6 +382,7 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
       setEditingSubChallenge(null);
       setEditSubTitle('');
       setEditSubDescription('');
+      setEditSubCurrentProgress(0);
       setEditSubTargetLimit(1);
     } catch (error) {
       console.error('Error updating sub-challenge:', error);
@@ -876,6 +891,20 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
 
               <div>
                 <label className="block text-sm font-chakra font-bold mb-2 text-hud">
+                  CURRENT_PROGRESS
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={editSubCurrentProgress}
+                  onChange={(e) => setEditSubCurrentProgress(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-full bg-void border border-tactical text-hud px-4 py-3 font-chakra font-bold focus:outline-none focus:border-terminal"
+                  placeholder="Current progress..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-chakra font-bold mb-2 text-hud">
                   TARGET_LIMIT
                 </label>
                 <input
@@ -896,7 +925,7 @@ export default function ModeratorChallengeDetail({ params }: { params: Promise<{
                 </button>
                 <button
                   onClick={saveSubChallengeEdit}
-                  disabled={!editSubTitle.trim() || editSubTargetLimit < 1}
+                  disabled={!editSubTitle.trim() || editSubTargetLimit < 1 || editSubCurrentProgress < 0 || editSubCurrentProgress > editSubTargetLimit}
                   className="flex-1 bg-tactical border border-tactical text-void hover:bg-tactical/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all py-3 flex items-center justify-center gap-2"
                 >
                   <Save size={16} /> UPDATE_OBJECTIVE
