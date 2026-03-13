@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { ReactNode } from "react";

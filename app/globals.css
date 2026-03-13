@@ -182,3 +182,210 @@ h1, h2, h3, h4, h5, h6 {
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
+
+/* ═══════════════════════════════════════════
+   LANDING PAGE SYSTEMS
+   ═══════════════════════════════════════════ */
+
+/* ── Atmospheric layers ── */
+.landing-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+  z-index: 50;
+}
+
+.landing-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  z-index: 51;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Glass and panel variants ── */
+.glass-tactical {
+  background: rgba(21, 21, 21, 0.82);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(242, 201, 76, 0.12);
+}
+
+.glass-dark {
+  background: rgba(8, 8, 8, 0.88);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(42, 42, 46, 0.6);
+}
+
+/* ── Glow effects ── */
+.glow-tactical {
+  box-shadow:
+    0 0 20px rgba(242, 201, 76, 0.12),
+    0 0 60px rgba(242, 201, 76, 0.06),
+    inset 0 1px 0 rgba(242, 201, 76, 0.08);
+}
+
+.glow-hostile {
+  box-shadow:
+    0 0 20px rgba(255, 42, 42, 0.15),
+    0 0 60px rgba(255, 42, 42, 0.06);
+}
+
+.glow-terminal {
+  box-shadow:
+    0 0 20px rgba(0, 255, 65, 0.12),
+    0 0 60px rgba(0, 255, 65, 0.05);
+}
+
+/* ── Product frame ── */
+.product-frame {
+  position: relative;
+  background: rgba(15, 15, 15, 0.95);
+  border: 1px solid rgba(242, 201, 76, 0.2);
+  box-shadow:
+    0 0 40px rgba(242, 201, 76, 0.08),
+    0 4px 30px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.product-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(242, 201, 76, 0.03) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+/* ── Compass bar ── */
+.compass-bar-container {
+  height: 32px;
+  background: linear-gradient(180deg, rgba(8, 8, 8, 0.95) 0%, rgba(8, 8, 8, 0.7) 100%);
+  border-bottom: 1px solid rgba(42, 42, 46, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+/* ── Kill feed ── */
+.killfeed-item {
+  font-size: 11px;
+  padding: 4px 10px;
+  background: rgba(8, 8, 8, 0.75);
+  border-left: 2px solid var(--tactical-yellow);
+  backdrop-filter: blur(4px);
+}
+
+/* ── Minimap ── */
+.minimap-ring {
+  border: 1px solid rgba(242, 201, 76, 0.3);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(21, 21, 21, 0.8) 0%, rgba(8, 8, 8, 0.95) 100%);
+}
+
+/* ── Chat message styles ── */
+.chat-msg {
+  padding: 3px 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  font-family: var(--font-mono);
+  color: var(--dimmed-gray);
+}
+
+.chat-msg-highlight {
+  background: rgba(242, 201, 76, 0.08);
+  border-left: 2px solid var(--tactical-yellow);
+  color: var(--hud-white);
+}
+
+/* ── Section rail ── */
+.section-rail {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.section-rail-dot {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--gunmetal);
+  background: transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.section-rail-dot.active {
+  border-color: var(--tactical-yellow);
+  background: var(--tactical-yellow);
+  box-shadow: 0 0 8px rgba(242, 201, 76, 0.4);
+}
+
+/* ── Tactical corner bracket ── */
+.tactical-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+.tactical-corner--tl { top: -1px; left: -1px; border-top: 2px solid var(--tactical-yellow); border-left: 2px solid var(--tactical-yellow); }
+.tactical-corner--tr { top: -1px; right: -1px; border-top: 2px solid var(--tactical-yellow); border-right: 2px solid var(--tactical-yellow); }
+.tactical-corner--bl { bottom: -1px; left: -1px; border-bottom: 2px solid var(--tactical-yellow); border-left: 2px solid var(--tactical-yellow); }
+.tactical-corner--br { bottom: -1px; right: -1px; border-bottom: 2px solid var(--tactical-yellow); border-right: 2px solid var(--tactical-yellow); }
+
+/* ── PUBG-style boost bar segments ── */
+.boost-segment {
+  height: 4px;
+  background: var(--gunmetal);
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+.boost-segment-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--tactical-yellow);
+  transform-origin: left;
+}
+
+/* ── Animations ── */
+@keyframes landing-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes landing-drift {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes landing-scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(200vh); }
+}
+
+@keyframes landing-radar {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes chat-scroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .landing-vignette,
+  .landing-grain {
+    display: none;
+  }
+
+  [data-landing-animated] {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}
