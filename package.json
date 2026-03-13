@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "concurrently \"next dev\" \"npx convex dev\"",
-    "build": "if [ \"$VERCEL_GIT_COMMIT_REF\" = \"main\" ]; then npx convex deploy --cmd='npm run next:build'; else npm run next:build; fi",
+    "build": "bash scripts/build.sh",
     "next:build": "next build",
     "start": "next start",
     "lint": "eslint",
