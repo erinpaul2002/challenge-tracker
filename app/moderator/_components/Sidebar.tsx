@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Sword,
   Crosshair,
+  Users,
   LogOut,
   ChevronRight,
   Shield,
@@ -18,6 +19,7 @@ const navItems = [
   { name: 'DASHBOARD', icon: LayoutDashboard, href: '/moderator/dashboard' },
   { name: 'CHALLENGES', icon: Sword, href: '/moderator/challenges' },
   { name: 'PROGRESS', icon: Crosshair, href: '/moderator/progress' },
+  { name: 'MEMBERSHIP', icon: Users, href: '/moderator/membership' },
 ];
 
 interface SidebarProps {

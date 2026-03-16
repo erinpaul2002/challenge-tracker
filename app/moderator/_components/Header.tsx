@@ -27,6 +27,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
     const segment = pathname.split('/').pop()?.toUpperCase();
     if (segment === 'DASHBOARD') return 'OVERVIEW';
     if (segment === 'CHALLENGES') return 'CHALLENGE_LOGS';
+    if (segment === 'MEMBERSHIP') return 'MEMBERSHIP';
     return segment || 'MODERATOR';
   };
 

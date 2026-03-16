@@ -35,6 +35,11 @@ export default function OverlayPage() {
     saveConfig,
     discardChanges,
     resetColorsToDefaults,
+    uploadCardBackgroundImage,
+    removeCardBackgroundImage,
+    updateCustomImageConfig,
+    uploadingImage,
+    imageUploadError,
   } = useOverlayConfig(config, streamerId);
 
   const { activeIndex, activeSubIndex, fade, animationClass, transitionDurationMs } = useOverlayAnimation(activeChallenges, tempConfig);
@@ -71,7 +76,14 @@ export default function OverlayPage() {
       </div>
 
       {/* Content area — fills remaining height, no outer scroll */}
-      {activeTab === 'themes' && tempConfig ? (
+      {loading || !tempConfig ? (
+        <div className="flex-1 min-h-0 border border-gunmetal bg-armor/60 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-xs font-bold font-mono uppercase tracking-[0.18em] text-dimmed">Loading overlay configuration…</div>
+            <div className="mt-2 text-[10px] font-mono text-dimmed/70">Syncing your equipped theme and uploaded assets.</div>
+          </div>
+        </div>
+      ) : activeTab === 'themes' ? (
         /* Theme showcase owns the entire remaining space */
         <div className="flex-1 min-h-0 flex flex-col">
           <ThemeShowcase
@@ -100,6 +112,11 @@ export default function OverlayPage() {
               onColorChange={handleColorChange}
               onThemePresetApply={applyThemePreset}
               onResetColors={resetColorsToDefaults}
+              onImageUpload={uploadCardBackgroundImage}
+              onRemoveImage={removeCardBackgroundImage}
+              onCustomImageConfigChange={updateCustomImageConfig}
+              uploadingImage={uploadingImage}
+              imageUploadError={imageUploadError}
               onSave={saveConfig}
               onDiscard={discardChanges}
             />

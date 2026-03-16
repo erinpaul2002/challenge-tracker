@@ -59,7 +59,25 @@ export default defineSchema({
     config: v.any(), // JSONB-equivalent — flexible theme config object
   }).index("by_streamerId", ["streamerId"]),
 
-  // 6) Sessions — custom session tokens for both streamers and moderators
+  // 6) Monthly membership counters — resets on month rollover
+  membershipCounters: defineTable({
+    streamerId: v.id("streamers"),
+    monthKey: v.string(), // YYYY-MM
+    currentCount: v.number(),
+    targetCount: v.number(),
+    updatedAt: v.number(),
+    updatedByModeratorId: v.optional(v.id("moderators")),
+  })
+    .index("by_streamerId", ["streamerId"])
+    .index("by_streamerId_monthKey", ["streamerId", "monthKey"]),
+
+  // 7) Membership overlay configurations — separate from challenge overlay themes
+  membershipOverlayConfigurations: defineTable({
+    streamerId: v.id("streamers"),
+    config: v.any(),
+  }).index("by_streamerId", ["streamerId"]),
+
+  // 8) Sessions — custom session tokens for both streamers and moderators
   sessions: defineTable({
     token: v.string(),
     streamerId: v.optional(v.id("streamers")),

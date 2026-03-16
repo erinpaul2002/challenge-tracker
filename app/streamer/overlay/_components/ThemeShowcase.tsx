@@ -278,7 +278,11 @@ export default function ThemeShowcase({ tempConfig, saving, hasChanges, saveStat
             const isPreviewed = hoveredTheme === preset.name && !isSelected;
             const isHovered = hoveredIndex === index;
             const Renderer = getThemeRenderer(preset.name);
-            const cardConfig = isSelected ? tempConfig : preset.config;
+            const cardConfig = isSelected
+              ? tempConfig
+              : preset.name === 'custom-image-card'
+                ? { ...preset.config, custom: tempConfig.custom }
+                : preset.config;
 
             return (
               <div

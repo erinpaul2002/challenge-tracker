@@ -9,6 +9,7 @@ import { Id } from '@/convex/_generated/dataModel';
 interface ChallengeOption {
   id: string;
   title: string;
+  givenBy?: string;
   status: 'active' | 'completed' | 'paused' | 'cancelled';
   subChallenges: SubChallengeOption[];
 }
@@ -95,6 +96,7 @@ export default function GlobalProgressUpdatePanel() {
     return (rawChallenges ?? []).map((challenge: {
       _id: string;
       title: string;
+      givenBy?: string;
       status: 'active' | 'completed' | 'paused' | 'cancelled';
       subChallenges: Array<{
         _id: string;
@@ -107,6 +109,7 @@ export default function GlobalProgressUpdatePanel() {
     }) => ({
       id: challenge._id,
       title: challenge.title,
+      givenBy: challenge.givenBy,
       status: challenge.status,
       subChallenges: challenge.subChallenges.map((subChallenge) => ({
         id: subChallenge._id,
@@ -245,7 +248,7 @@ export default function GlobalProgressUpdatePanel() {
                   >
                     {challenges.map((challenge) => (
                       <option key={challenge.id} value={challenge.id}>
-                        {challenge.title}
+                        {challenge.givenBy ? `${challenge.title} [${challenge.givenBy}]` : challenge.title}
                       </option>
                     ))}
                   </select>

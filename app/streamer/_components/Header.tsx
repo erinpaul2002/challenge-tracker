@@ -31,6 +31,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
     if (segment === 'CHALLENGES') return 'CHALLENGES';
     if (segment === 'MODERATOR') return 'MODERATORS';
     if (segment === 'OVERLAY') return 'OVERLAY_CONFIG';
+    if (segment === 'MEMBERSHIP') return 'MEMBERSHIP_OVERLAY';
     if (segment === 'PROFILE') return 'PROFILE';
     return segment || 'STREAMER';
   };

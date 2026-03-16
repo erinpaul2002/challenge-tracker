@@ -23,6 +23,7 @@ const navItems = [
   { name: 'SCOREBOARD', icon: BarChart3, href: '/streamer/scoreboard' },
   { name: 'MODERATORS', icon: Users, href: '/streamer/moderator' },
   { name: 'OVERLAY', icon: MonitorPlay, href: '/streamer/overlay' },
+  { name: 'MEMBERSHIP', icon: Users, href: '/streamer/membership' },
   { name: 'PROFILE', icon: UserCircle, href: '/streamer/profile' },
 ];
 

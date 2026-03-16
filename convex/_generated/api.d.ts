@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as challenges from "../challenges.js";
+import type * as memberships from "../memberships.js";
 import type * as moderators from "../moderators.js";
 import type * as overlay from "../overlay.js";
 import type * as profile from "../profile.js";
@@ -23,6 +24,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   challenges: typeof challenges;
+  memberships: typeof memberships;
   moderators: typeof moderators;
   overlay: typeof overlay;
   profile: typeof profile;

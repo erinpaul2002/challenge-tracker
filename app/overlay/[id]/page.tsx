@@ -14,6 +14,7 @@ import {
   mergeWithDefaults,
 } from '../../streamer/overlay/types';
 import { getThemeRenderer } from '../../streamer/overlay/_components/themes';
+import CompletionCelebration from '../../streamer/overlay/_components/CompletionCelebration';
 
 function getEntranceClass(type: string, visible: boolean): string {
   if (visible) return 'opacity-100 translate-x-0 translate-y-0 scale-100';
@@ -256,6 +257,28 @@ export default function OverlayPage() {
       : 0
     : activeChallenge.progress;
 
+  const isChallengeCompleted =
+    activeChallenge.challenge.status === 'completed' ||
+    activeChallenge.progress >= 100 ||
+    (activeChallenge.subChallenges.length > 0 &&
+      activeChallenge.subChallenges.every((sub) =>
+        sub.status === 'completed' ||
+        (sub.target_limit > 0 && sub.current_progress / sub.target_limit >= 1)
+      ));
+
+  const isCurrentSubChallengeCompleted =
+    !isChallengeCompleted &&
+    Boolean(
+      currentSubChallenge &&
+        (currentSubChallenge.status === 'completed' || currentSubProgress >= 100)
+    );
+
+  const completionBadgeLabel = isChallengeCompleted
+    ? 'CHALLENGE COMPLETED'
+    : isCurrentSubChallengeCompleted
+      ? 'SUB-CHALLENGE COMPLETED'
+      : null;
+
   const challenge = {
     ...activeChallenge,
     subChallenges: currentSubChallenge ? [currentSubChallenge] : [],
@@ -288,6 +311,13 @@ export default function OverlayPage() {
             willChange: 'opacity, transform',
           }}
         >
+          {completionBadgeLabel && (
+            <CompletionCelebration
+              label={completionBadgeLabel}
+              accentColor={config.colors.completedIndicator}
+              borderColor={config.colors.border}
+            />
+          )}
           {createElement(getThemeRenderer(config.theme), {
             challenge,
             config,

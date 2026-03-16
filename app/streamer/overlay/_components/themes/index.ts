@@ -16,6 +16,7 @@ import ThemeBloodBones from './ThemeBloodBones';
 import ThemeHighRollerRoyaleRevival from './ThemeHighRollerRoyaleRevival';
 import ThemeElderflame from './ThemeElderflame';
 import ThemePhoenixRevival from './ThemePhoenixRevival';
+import ThemeCustomImageCard from './ThemeCustomImageCard';
 
 const THEME_RENDERERS: Record<string, React.ComponentType<ThemeRendererProps>> = {
     'default': ThemeDefault,
@@ -35,10 +36,11 @@ const THEME_RENDERERS: Record<string, React.ComponentType<ThemeRendererProps>> =
     'highrollerroyalerevival': ThemeHighRollerRoyaleRevival,
     'elderflame': ThemeElderflame,
     'phoenixrevival': ThemePhoenixRevival,
+    'custom-image-card': ThemeCustomImageCard,
 };
 
 export function getThemeRenderer(theme: string): React.ComponentType<ThemeRendererProps> {
     return THEME_RENDERERS[theme] || ThemeDefault;
 }
 
-export { ThemeDefault, ThemeKuronami, ThemePrelude, ThemeRadiant, ThemeScrappunk, ThemeAzureDragon, ThemeChromaTactical, ThemeCyberThreat, ThemeAraxys, ThemeSpectrum, ThemeNeoFrontier, ThemeSingularity, ThemeGearhead, ThemeBloodBones, ThemeHighRollerRoyaleRevival, ThemeElderflame, ThemePhoenixRevival };
+export { ThemeDefault, ThemeKuronami, ThemePrelude, ThemeRadiant, ThemeScrappunk, ThemeAzureDragon, ThemeChromaTactical, ThemeCyberThreat, ThemeAraxys, ThemeSpectrum, ThemeNeoFrontier, ThemeSingularity, ThemeGearhead, ThemeBloodBones, ThemeHighRollerRoyaleRevival, ThemeElderflame, ThemePhoenixRevival, ThemeCustomImageCard };
