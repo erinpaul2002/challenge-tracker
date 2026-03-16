@@ -2,6 +2,7 @@ import { createElement } from 'react';
 import { MonitorPlay, Target } from 'lucide-react';
 import { OverlayConfig, ActiveChallenge, LayoutPosition, THEME_PRESETS } from '../types';
 import { getThemeRenderer } from './themes';
+import CompletionCelebration from './CompletionCelebration';
 
 interface OverlayPreviewProps {
   tempConfig: OverlayConfig | null;
@@ -53,6 +54,30 @@ export default function OverlayPreview({
       ? Math.min(100, Math.max(0, (currentSubChallenge.current_progress / currentSubChallenge.target_limit) * 100))
       : 0
     : activeChallenge?.progress;
+
+  const isChallengeCompleted = Boolean(
+    activeChallenge && (
+      activeChallenge.challenge.status === 'completed' ||
+      activeChallenge.progress >= 100 ||
+      (activeChallenge.subChallenges.length > 0 &&
+        activeChallenge.subChallenges.every((sub) =>
+          sub.status === 'completed' ||
+          (sub.target_limit > 0 && sub.current_progress / sub.target_limit >= 1)
+        ))
+    )
+  );
+
+  const isCurrentSubChallengeCompleted = Boolean(
+    !isChallengeCompleted &&
+      currentSubChallenge &&
+      (currentSubChallenge.status === 'completed' || (currentSubProgress ?? 0) >= 100)
+  );
+
+  const completionBadgeLabel = isChallengeCompleted
+    ? 'CHALLENGE COMPLETED'
+    : isCurrentSubChallengeCompleted
+      ? 'SUB-CHALLENGE COMPLETED'
+      : null;
 
   const challengeForRender = activeChallenge
     ? {
@@ -130,6 +155,13 @@ export default function OverlayPreview({
                   transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >
+                {completionBadgeLabel && (
+                  <CompletionCelebration
+                    label={completionBadgeLabel}
+                    accentColor={tempConfig.colors.completedIndicator}
+                    borderColor={tempConfig.colors.border}
+                  />
+                )}
                 {createElement(themeRenderer, {
                   challenge: challengeForRender,
                   config: tempConfig,

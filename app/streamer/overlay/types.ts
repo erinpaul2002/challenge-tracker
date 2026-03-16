@@ -1,4 +1,4 @@
-export type ThemeName = 'default' | 'kuronami' | 'prelude' | 'radiant' | 'scrappunk' | 'azuredragon' | 'chromatactical' | 'cyberthreat' | 'araxys' | 'spectrum' | 'neofrontier' | 'singularity' | 'gearhead' | 'bloodbones' | 'highrollerroyalerevival' | 'elderflame' | 'phoenixrevival';
+export type ThemeName = 'default' | 'kuronami' | 'prelude' | 'radiant' | 'scrappunk' | 'azuredragon' | 'chromatactical' | 'cyberthreat' | 'araxys' | 'spectrum' | 'neofrontier' | 'singularity' | 'gearhead' | 'bloodbones' | 'highrollerroyalerevival' | 'elderflame' | 'phoenixrevival' | 'custom-image-card';
 
 export type EntranceAnimation = 'slide-left' | 'slide-right' | 'slide-up' | 'fade' | 'scale' | 'glitch';
 export type ExitAnimation = 'slide-left' | 'slide-right' | 'fade' | 'scale';
@@ -62,6 +62,14 @@ export interface OverlayConfig {
     showDate: boolean;
     // Legacy field kept for backward compatibility
     compactMode?: boolean;
+  };
+  custom?: {
+    cardBackgroundImageStorageId?: string;
+    cardBackgroundImageUrl?: string;
+    cardBackgroundImageOpacity?: number; // 0-100
+    cardBackgroundImageSize?: 'cover' | 'contain';
+    cardBackgroundImagePosition?: string;
+    cardBackgroundImageRepeat?: 'no-repeat' | 'repeat';
   };
 }
 
@@ -156,6 +164,44 @@ export const DEFAULT_OVERLAY_CONFIG: OverlayConfig = {
     showGivenBy: true,
     showDate: true,
     compactMode: false,
+  },
+  custom: {
+    cardBackgroundImageUrl: '',
+    cardBackgroundImageOpacity: 100,
+    cardBackgroundImageSize: 'cover',
+    cardBackgroundImagePosition: 'center',
+    cardBackgroundImageRepeat: 'no-repeat',
+  },
+};
+
+export const CUSTOM_IMAGE_CARD_OVERLAY_CONFIG: OverlayConfig = {
+  ...DEFAULT_OVERLAY_CONFIG,
+  theme: 'custom-image-card',
+  colors: {
+    ...DEFAULT_OVERLAY_CONFIG.colors,
+    cardBackground: '#0f1116',
+    border: '#3f4a62',
+    challengeTitle: '#f3f6ff',
+    subchallengeTitle: '#d2d9ef',
+    subchallengeCompleted: '#7f8bad',
+    viewerName: '#ffffff',
+    dateText: '#9da7c2',
+    progressCount: '#8de3ff',
+    progressFill: '#59d0ff',
+    progressEmpty: '#0b0d14',
+    iconPrimary: '#8de3ff',
+    iconSecondary: '#8b96ba',
+    completedIndicator: '#5ad8a6',
+  },
+  layout: {
+    ...DEFAULT_OVERLAY_CONFIG.layout,
+    borderRadius: 12,
+    padding: 18,
+    showBorder: true,
+  },
+  animations: {
+    ...DEFAULT_OVERLAY_CONFIG.animations,
+    entranceType: 'slide-up',
   },
 };
 
@@ -968,6 +1014,12 @@ export const KURONAMI_OVERLAY_CONFIG: OverlayConfig = {
 
 export const THEME_PRESETS: ThemePreset[] = [
   {
+    name: 'custom-image-card',
+    label: 'Custom Image Card',
+    description: 'Upload your own card background image and fully customize all overlay element colors.',
+    config: { ...CUSTOM_IMAGE_CARD_OVERLAY_CONFIG },
+  },
+  {
     name: 'default',
     label: 'Battleground',
     description: 'Military tactical HUD with PUBG-inspired orange ammo counters, zone-closing progress bar, and dust particle VFX',
@@ -1092,7 +1144,7 @@ export function isUsingCustomColors(config: OverlayConfig): boolean {
 export function mergeWithDefaults(saved: Partial<OverlayConfig> | null): OverlayConfig {
   if (!saved) return { ...DEFAULT_OVERLAY_CONFIG };
   // Map saved theme to a valid ThemeName
-  const validThemes: ThemeName[] = ['default', 'kuronami', 'prelude', 'radiant', 'scrappunk', 'azuredragon', 'chromatactical', 'cyberthreat', 'araxys', 'spectrum', 'neofrontier', 'singularity', 'gearhead', 'bloodbones', 'highrollerroyalerevival', 'elderflame', 'phoenixrevival'];
+  const validThemes: ThemeName[] = ['default', 'kuronami', 'prelude', 'radiant', 'scrappunk', 'azuredragon', 'chromatactical', 'cyberthreat', 'araxys', 'spectrum', 'neofrontier', 'singularity', 'gearhead', 'bloodbones', 'highrollerroyalerevival', 'elderflame', 'phoenixrevival', 'custom-image-card'];
   const theme: ThemeName = validThemes.includes(saved.theme as ThemeName) ? (saved.theme as ThemeName) : 'default';
 
   const mergedColors = { ...DEFAULT_OVERLAY_CONFIG.colors, ...(saved.colors || {}) };
@@ -1117,5 +1169,6 @@ export function mergeWithDefaults(saved: Partial<OverlayConfig> | null): Overlay
     animations: { ...DEFAULT_OVERLAY_CONFIG.animations, ...(saved.animations || {}) },
     layout: { ...DEFAULT_OVERLAY_CONFIG.layout, ...(saved.layout || {}) },
     display: { ...DEFAULT_OVERLAY_CONFIG.display, ...(saved.display || {}) },
+    custom: { ...DEFAULT_OVERLAY_CONFIG.custom, ...(saved.custom || {}) },
   };
 }

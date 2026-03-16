@@ -1,6 +1,7 @@
 'use client';
 
-import { Settings2, RefreshCw, Check, RotateCcw, Palette } from 'lucide-react';
+import { useRef } from 'react';
+import { Settings2, RefreshCw, Check, RotateCcw, Palette, Upload, ImageOff } from 'lucide-react';
 import { OverlayConfig, SaveStatus, ThemeName, LayoutPosition, isUsingCustomColors, THEME_PRESETS } from '../types';
 import { OverlayTab } from './OverlayTabs';
 
@@ -15,6 +16,11 @@ interface OverlayConfigProps {
   onColorChange: (colorKey: string, value: string) => void;
   onThemePresetApply: (themeName: ThemeName) => void;
   onResetColors: () => void;
+  onImageUpload: (file: File) => void;
+  onRemoveImage: () => void;
+  onCustomImageConfigChange: (updates: Partial<NonNullable<OverlayConfig['custom']>>) => void;
+  uploadingImage: boolean;
+  imageUploadError: string | null;
   onSave: () => void;
   onDiscard: () => void;
 }
@@ -56,6 +62,11 @@ export default function OverlayConfigComponent({
   onConfigChange,
   onColorChange,
   onResetColors,
+  onImageUpload,
+  onRemoveImage,
+  onCustomImageConfigChange,
+  uploadingImage,
+  imageUploadError,
   onSave,
   onDiscard,
 }: OverlayConfigProps) {
@@ -70,7 +81,17 @@ export default function OverlayConfigComponent({
       <div className="p-6">
         {/* Tab content — themes tab is handled at page level */}
         {activeTab === 'colors' && (
-          <ColorsPanel tempConfig={tempConfig} saving={saving} onColorChange={onColorChange} onResetColors={onResetColors} />
+          <ColorsPanel
+            tempConfig={tempConfig}
+            saving={saving}
+            onColorChange={onColorChange}
+            onResetColors={onResetColors}
+            onImageUpload={onImageUpload}
+            onRemoveImage={onRemoveImage}
+            onCustomImageConfigChange={onCustomImageConfigChange}
+            uploadingImage={uploadingImage}
+            imageUploadError={imageUploadError}
+          />
         )}
         {activeTab === 'typography' && (
           <TypographyPanel tempConfig={tempConfig} onConfigChange={onConfigChange} />
@@ -125,14 +146,31 @@ export default function OverlayConfigComponent({
 // ThemesPanel moved to ThemeShowcase.tsx
 
 // ── Colors Panel ──────────────────────────────
-function ColorsPanel({ tempConfig, saving, onColorChange, onResetColors }: {
+function ColorsPanel({
+  tempConfig,
+  saving,
+  onColorChange,
+  onResetColors,
+  onImageUpload,
+  onRemoveImage,
+  onCustomImageConfigChange,
+  uploadingImage,
+  imageUploadError,
+}: {
   tempConfig: OverlayConfig;
   saving: boolean;
   onColorChange: (key: string, val: string) => void;
   onResetColors: () => void;
+  onImageUpload: (file: File) => void;
+  onRemoveImage: () => void;
+  onCustomImageConfigChange: (updates: Partial<NonNullable<OverlayConfig['custom']>>) => void;
+  uploadingImage: boolean;
+  imageUploadError: string | null;
 }) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const isCustom = isUsingCustomColors(tempConfig);
   const themeLabel = THEME_PRESETS.find((p) => p.name === tempConfig.theme)?.label || tempConfig.theme;
+  const hasImage = Boolean(tempConfig.custom?.cardBackgroundImageUrl);
 
   const colorGroups = [
     {
@@ -148,6 +186,7 @@ function ColorsPanel({ tempConfig, saving, onColorChange, onResetColors }: {
       colors: [
         { key: 'challengeTitle', label: 'Challenge Title' },
         { key: 'subchallengeTitle', label: 'Subchallenge' },
+        { key: 'subchallengeCompleted', label: 'Subchallenge Done' },
         { key: 'viewerName', label: 'Viewer/Reward Text' },
         { key: 'dateText', label: 'Viewer/Reward Title' },
         { key: 'progressCount', label: 'Progress Count' },
@@ -158,6 +197,7 @@ function ColorsPanel({ tempConfig, saving, onColorChange, onResetColors }: {
       colors: [
         { key: 'progressFill', label: 'Fill' },
         { key: 'progressEmpty', label: 'Empty' },
+        { key: 'completedIndicator', label: 'Completed Mark' },
       ],
     },
     {
@@ -171,6 +211,91 @@ function ColorsPanel({ tempConfig, saving, onColorChange, onResetColors }: {
 
   return (
     <div className="space-y-6">
+      {tempConfig.theme === 'custom-image-card' && (
+        <div className="space-y-3 p-3 border border-gunmetal bg-void/40 rounded">
+          <div className="text-[10px] font-bold font-mono text-dimmed uppercase tracking-wider">Card Background Image</div>
+
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onImageUpload(file);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={saving || uploadingImage}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-bold font-mono uppercase tracking-wider border border-gunmetal bg-void hover:bg-gunmetal/20 text-dimmed hover:text-hud transition-colors disabled:opacity-50"
+            >
+              <Upload size={11} />
+              {uploadingImage ? 'Uploading...' : hasImage ? 'Replace Image' : 'Upload Image'}
+            </button>
+
+            {hasImage && (
+              <button
+                type="button"
+                onClick={onRemoveImage}
+                disabled={saving || uploadingImage}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-bold font-mono uppercase tracking-wider border border-gunmetal bg-void hover:bg-red-500/10 text-dimmed hover:text-red-300 transition-colors disabled:opacity-50"
+              >
+                <ImageOff size={11} />
+                Remove
+              </button>
+            )}
+          </div>
+
+          {imageUploadError && (
+            <div className="text-[10px] text-red-400 font-mono">✗ {imageUploadError}</div>
+          )}
+
+          {hasImage && (
+            <div className="space-y-3">
+              <SliderControl
+                label="Image Opacity"
+                value={tempConfig.custom?.cardBackgroundImageOpacity ?? 100}
+                min={10}
+                max={100}
+                step={5}
+                unit="%"
+                onChange={(v) => onCustomImageConfigChange({ cardBackgroundImageOpacity: v })}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[9px] font-mono text-dimmed block mb-1">Image Fit</label>
+                  <select
+                    value={tempConfig.custom?.cardBackgroundImageSize || 'cover'}
+                    onChange={(e) => onCustomImageConfigChange({ cardBackgroundImageSize: e.target.value as 'cover' | 'contain' })}
+                    className="w-full bg-void border border-gunmetal px-3 py-2 text-xs font-mono text-hud focus:border-tactical outline-none"
+                  >
+                    <option value="cover">Cover</option>
+                    <option value="contain">Contain</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[9px] font-mono text-dimmed block mb-1">Image Repeat</label>
+                  <select
+                    value={tempConfig.custom?.cardBackgroundImageRepeat || 'no-repeat'}
+                    onChange={(e) => onCustomImageConfigChange({ cardBackgroundImageRepeat: e.target.value as 'no-repeat' | 'repeat' })}
+                    className="w-full bg-void border border-gunmetal px-3 py-2 text-xs font-mono text-hud focus:border-tactical outline-none"
+                  >
+                    <option value="no-repeat">No repeat</option>
+                    <option value="repeat">Repeat</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Color Mode Indicator + Reset Button */}
       <div className="flex items-center justify-between gap-2 p-3 border border-gunmetal bg-void/50 rounded">
         <div className="flex items-center gap-2">
